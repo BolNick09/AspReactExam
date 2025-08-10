@@ -1,13 +1,15 @@
-// Client/src/api/authApi.js
 const API_URL = "https://localhost:5001/api/auth";
 
-export async function register(username, password) {
-    const response = await fetch(`${API_URL}/register`, {
+export async function register(username, email, password) 
+{
+    const response = await fetch(`${API_URL}/register`, 
+        {
         method: "POST",
-        headers: {
+        headers: 
+        {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, email, password }),
     });
 
     if (!response.ok) {

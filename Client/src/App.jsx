@@ -67,23 +67,12 @@ function Card({ icon: IconComponent, isFlipped, onClick })
 
 async function handleGameOver(finalScore) 
 {
-    const token = localStorage.getItem("token");
-    if (!token) 
-      {
-        console.warn("Нет токена — результат не отправлен");
-        return;
-    }
-
-    try 
-    {
-      await saveGameResult(finalScore, token);
-      console.log("Результат успешно отправлен на сервер");
-    } 
-    catch (error) 
-    {
-      console.error("Ошибка при отправке результата:", error);
-    }
-
+  const token = localStorage.getItem("token");
+  if (!token) 
+  {
+      console.warn("Нет токена — результат не отправлен");
+      return;
+  }
   try
   {
     await saveGameResult(finalScore, token);
@@ -212,7 +201,8 @@ function Game()
       setGameCompleted(true);
       setTimerActive(false);
       saveResults();
-      handleGameOver(score);
+      const finalScore = Math.max(0, 1000 - clicks * 10 - globalTime);
+      handleGameOver(finalScore);
     }
   }, [cards, globalTime, clicks, playerName]);
 

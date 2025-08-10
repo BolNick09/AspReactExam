@@ -1,8 +1,7 @@
-// Client/src/Pages/Login.jsx
 import React, { useState } from "react";
 import { login } from "../api/authApi";
 import { useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
+import { jwtDecode}  from "jwt-decode";
 
 export default function LoginPage() {
     const navigate = useNavigate();
@@ -14,17 +13,11 @@ export default function LoginPage() {
         e.preventDefault();
         try {
             const data = await login(username, password);
-
-            // Сохраняем токен
             localStorage.setItem("token", data.token);
 
-            // Декодируем токен и достаём имя пользователя
             const decoded = jwtDecode(data.token);
-            const userNameFromToken = decoded?.unique_name || decoded?.sub || username;
+            localStorage.setItem("username", decoded.unique_name);
 
-            console.log("Вошёл пользователь:", userNameFromToken);
-
-            alert(`Вы успешно вошли как ${userNameFromToken}`);
             navigate("/");
         } catch (err) {
             setError(err.message || "Ошибка входа");
@@ -32,28 +25,24 @@ export default function LoginPage() {
     }
 
     return (
-        <div style={{ maxWidth: "400px", margin: "auto", padding: "20px" }}>
+        <div className="auth-container">
             <h2>Вход</h2>
-            {error && <p style={{ color: "red" }}>{error}</p>}
+            {error && <p className="error">{error}</p>}
             <form onSubmit={handleSubmit}>
-                <div>
-                    <label>Имя пользователя</label>
-                    <input
-                        type="text"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        required
-                    />
-                </div>
-                <div>
-                    <label>Пароль</label>
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                </div>
+                <input
+                    type="text"
+                    placeholder="Имя пользователя"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                />
+                <input
+                    type="password"
+                    placeholder="Пароль"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                />
                 <button type="submit">Войти</button>
             </form>
         </div>

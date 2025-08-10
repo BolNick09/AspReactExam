@@ -1,21 +1,34 @@
 import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { getAllResults } from '../api/gameResultsApi';
 
-export default function ResultsTable() 
-{
+export default function ResultsTable() {
   const [results, setResults] = useState([]);
-  const playerName = useSelector(state => state.reduceSaver.playerName);
 
-  useEffect(() => 
-  {
-    const storedResults = JSON.parse(localStorage.getItem('memoryGameResults')) || [];
-    setResults(storedResults.sort((a, b) => b.score - a.score));
+  useEffect(() => {
+    (async () => {
+      try {
+        const serverResults = await getAllResults();
+        const mapped = serverResults.map(r => ({
+          playerName: r.username || r.Username || 'Аноним',
+          score: r.score || 0,
+          date: r.playedAt || (new Date()).toISOString(),
+          time: r.time || null,
+          clicks: r.clicks || null
+        }));
+        setResults(mapped.sort((a, b) => b.score - a.score));
+        return;
+      } catch (e) {
+        console.warn('Не удалось получить результаты с сервера, используем localStorage', e);
+      }
+
+      const storedResults = JSON.parse(localStorage.getItem('memoryGameResults') || '[]');
+      setResults(storedResults.sort((a, b) => b.score - a.score));
+    })();
   }, []);
 
   return (
     <div style={{ margin: '20px', maxWidth: '600px' }}>
       <h2>Таблица рекордов</h2>
-      {playerName && <p>Текущий игрок: {playerName}</p>}
       {results.length === 0 ? (
         <p>Пока нет сохраненных результатов</p>
       ) : (
@@ -48,28 +61,23 @@ export default function ResultsTable()
   );
 }
 
-// Стили для таблицы
-const tableHeaderStyle = 
-{
-  padding: '10px',
+const tableHeaderStyle = {
+  padding: '8px',
+  border: '1px solid #ddd',
   textAlign: 'left',
-  backgroundColor: '#646cff',
-  color: 'black'
+  backgroundColor: '#f2f2f2'
 };
 
-const tableCellStyle = 
-{
+const tableCellStyle = {
   padding: '8px',
   border: '1px solid #ddd',
   color: 'black'
 };
 
-const evenRowStyle = 
-{
+const evenRowStyle = {
   backgroundColor: '#f9f9f9'
 };
 
-const oddRowStyle = 
-{
+const oddRowStyle = {
   backgroundColor: 'white'
 };
