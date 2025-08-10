@@ -8,6 +8,10 @@ import Home from './Pages/Home'
 import NavBar from './Pages/NavBar'
 import ResultsTable from './Pages/ResultsTable'
 import PlayerForm from './PlayerForm'
+import LoginPage from "./Pages/Login";
+import RegisterPage from "./Pages/Register";
+import { saveGameResult } from "./api/gameResultsApi";
+import { getToken } from "./auth/authority"; // если у тебя есть утилита для получения токена
 
 import { useSelector, useDispatch } from 'react-redux'
 import { 
@@ -58,6 +62,37 @@ function Card({ icon: IconComponent, isFlipped, onClick })
       {isFlipped && <IconComponent style={{ fontSize: '3rem' }} />}
     </div>
   );
+
+}
+
+async function handleGameOver(finalScore) 
+{
+    const token = localStorage.getItem("token");
+    if (!token) 
+      {
+        console.warn("Нет токена — результат не отправлен");
+        return;
+    }
+
+    try 
+    {
+      await saveGameResult(finalScore, token);
+      console.log("Результат успешно отправлен на сервер");
+    } 
+    catch (error) 
+    {
+      console.error("Ошибка при отправке результата:", error);
+    }
+
+  try
+  {
+    await saveGameResult(finalScore, token);
+    console.log("Результат успешно сохранён в БД");
+  } 
+  catch (error) 
+  {
+    console.error("Ошибка сохранения результата:", error);
+  }
 }
 
 function Game() 
@@ -101,6 +136,37 @@ function Game()
   const [cards, setCards] = useState(initializeGame());
   const [flippedIndices, setFlippedIndices] = useState([]);
   const [gameCompleted, setGameCompleted] = useState(false);
+  useEffect(() => {
+    // когда игра завершается — формируем итоговый счёт и отправляем на сервер
+    if (gameCompleted) {
+      const finalScore = Math.max(1000 - (globalTime * 10 + clicks * 5), 0);
+      (async () => {
+        try {
+          const token = getToken();
+          if (!token) {
+            // сохраняем локально, если пользователь не авторизован
+            const stored = JSON.parse(localStorage.getItem('memoryGameResults') || '[]');
+            stored.push({
+              playerName: 'Аноним',
+              score: finalScore,
+              date: new Date().toISOString(),
+              time: globalTime,
+              clicks
+            });
+            localStorage.setItem('memoryGameResults', JSON.stringify(stored));
+            console.warn('Пользователь не авторизован — результат сохранён в localStorage');
+            return;
+          }
+
+          await saveGameResult({ score: finalScore, time: globalTime, clicks }, token);
+          console.log('Результат успешно отправлен на сервер');
+        } catch (err) {
+          console.error('Ошибка при отправке результата:', err);
+        }
+      })();
+    }
+  }, [gameCompleted]);    
+
   const [timerActive, setTimerActive] = useState(isGameActive);
 
   useEffect(() => 
@@ -141,10 +207,12 @@ function Game()
 
   useEffect(() => 
   {
-    if (cards.every(card => card.isMatched)) {
+    if (cards.every(card => card.isMatched)) 
+      {
       setGameCompleted(true);
       setTimerActive(false);
       saveResults();
+      handleGameOver(score);
     }
   }, [cards, globalTime, clicks, playerName]);
 
@@ -290,6 +358,12 @@ const router = createBrowserRouter([
       {
         path: "*",
         element: <DeadEnd />
+      },
+      { path: "/login", 
+        element: <LoginPage /> 
+      },
+      { path: "/register", 
+        element: <RegisterPage /> 
       },
     ]
   }
