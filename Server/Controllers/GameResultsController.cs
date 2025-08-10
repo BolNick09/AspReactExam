@@ -23,7 +23,7 @@ namespace Server.Controllers
 
         // POST: api/GameResults
         // Сохранение результата игры
-        [HttpPost]
+        [HttpPost("save")]
         [Authorize]
         public async Task<IActionResult> SaveResult([FromBody] SaveResultRequest request)
         {
