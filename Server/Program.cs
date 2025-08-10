@@ -1,90 +1,70 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Server.Data;
 using Server.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using System;
-using System.Text; 
-using Microsoft.IdentityModel.Tokens; 
+using System.Text;
 
-namespace Server;
+var builder = WebApplication.CreateBuilder(args);
 
-public class Program
+// РџРѕРґРєР»СЋС‡РµРЅРёРµ Р‘Р”
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Identity
+builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
+
+// JWT
+builder.Services.AddScoped<JwtService>();
+builder.Services.AddAuthentication(options =>
 {
-    public static void Main(string[] args)
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        var builder = WebApplication.CreateBuilder(args);
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
 
-        // Add services to the container.
-        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-        builder.Services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer(connectionString));
-        builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+    };
+});
 
-        builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-            .AddEntityFrameworkStores<ApplicationDbContext>();
-        builder.Services.AddAuthentication(options =>
-        {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-        })
-        .AddJwtBearer(options =>
-        {
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                ValidAudience = builder.Configuration["Jwt:Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-            };
-        });
-        builder.Services.AddScoped<JwtService>();
-        builder.Services.AddRazorPages();
-        builder.Services.AddCors(options =>
-        {
-            options.AddPolicy("ReactApp", policy =>
-            {
-                policy.WithOrigins("http://localhost:5173") 
-                      .AllowAnyHeader() // Разрешить все заголовки
-                      .AllowAnyMethod() // Разрешить все HTTP-методы (GET, POST и т. д.)
-                      .AllowCredentials(); // Если используете куки или авторизацию
-            });
-        });
+builder.Services.AddControllers();
 
+// CORS вЂ” С‡С‚РѕР±С‹ РєР»РёРµРЅС‚ РјРѕРі СЃС‚СѓС‡Р°С‚СЊСЃСЏ РЅР° СЃРµСЂРІРµСЂ
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowClient",
+        policy => policy
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+});
 
+var app = builder.Build();
 
+app.UseHttpsRedirection();
+app.UseStaticFiles();
 
-        var app = builder.Build();
+app.UseRouting();
 
-        // Configure the HTTP request pipeline.
-        if (app.Environment.IsDevelopment())
-        {
-            app.UseMigrationsEndPoint();
-        }
-        else
-        {
-            app.UseExceptionHandler("/Error");
-            // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-            app.UseHsts();
-        }
-        app.MapControllers();
-        app.MapRazorPages();
-        app.UseHttpsRedirection();
-        app.UseStaticFiles();
-        app.MapFallbackToFile("index.html");
+app.UseCors("AllowClient");
 
-        app.UseRouting();
-        app.UseCors("ReactApp"); 
-        app.UseAuthentication();
-        app.UseAuthorization();
+app.UseAuthentication();
+app.UseAuthorization();
 
-        
+app.MapControllers();
+app.MapFallbackToFile("index.html");
 
-        app.Run();
-    }
-}
+app.Run();
