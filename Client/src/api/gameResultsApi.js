@@ -1,22 +1,27 @@
 const API_URL = "https://localhost:5001/api/GameResults";
 
-export async function saveGameResult(score, token) {
-  const response = await fetch(API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
-    },
-    body: JSON.stringify(score)
-  });
+export async function saveGameResult(score) {
+    const token = localStorage.getItem("token");
 
-  if (!response.ok) {
-    throw new Error("Failed to save result");
-  }
+    if (!token) {
+        throw new Error("Токен не найден. Войдите в систему.");
+    }
 
-  return await response.json();
+    const response = await fetch("/api/GameResults/save", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ score })
+    });
+
+    if (!response.ok) {
+        throw new Error(`Ошибка сохранения результата: ${response.status}`);
+    }
+
+    return await response.json();
 }
-
 export async function getAllResults() {
   const response = await fetch(API_URL);
   if (!response.ok) {

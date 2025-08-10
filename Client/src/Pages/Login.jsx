@@ -1,50 +1,77 @@
 import React, { useState } from "react";
-import { login } from "../api/authApi";
 import { useNavigate } from "react-router-dom";
-import { jwtDecode}  from "jwt-decode";
+import { login } from "../api/authApi";
+import { jwtDecode } from "jwt-decode"; // у тебя v4.0.0 — импорт с фигурными скобками
 
-export default function LoginPage() {
-    const navigate = useNavigate();
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
+const Login = () => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-    async function handleSubmit(e) {
-        e.preventDefault();
-        try {
-            const data = await login(username, password);
-            localStorage.setItem("token", data.token);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    try {
+      // ВЫЗЫВАЕМ именно так — один объект, как сейчас в проекте
+      const data = await login({ username, password });
 
-            const decoded = jwtDecode(data.token);
-            localStorage.setItem("username", decoded.unique_name);
+      if (!data || !data.token) {
+        // если сервер вернул не то, что ожидали — логируем и показываем
+        console.error("Login response unexpected:", data);
+        setError("Сервер не вернул токен при входе");
+        return;
+      }
 
-            navigate("/");
-        } catch (err) {
-            setError(err.message || "Ошибка входа");
-        }
+      localStorage.setItem("token", data.token);
+
+      try {
+        const decoded = jwtDecode(data.token);
+        console.log("Decoded token:", decoded);
+      } catch (dErr) {
+        console.warn("Не удалось декодировать JWT:", dErr);
+      }
+
+      navigate("/");
+    } catch (err) {
+      // err может быть объектом, строкой или Error
+      console.error("Login failed:", err);
+      const msg = (err && (err.message || JSON.stringify(err))) || "Ошибка входа";
+      setError(msg);
     }
+  };
 
-    return (
-        <div className="auth-container">
-            <h2>Вход</h2>
-            {error && <p className="error">{error}</p>}
-            <form onSubmit={handleSubmit}>
-                <input
-                    type="text"
-                    placeholder="Имя пользователя"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                />
-                <input
-                    type="password"
-                    placeholder="Пароль"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                />
-                <button type="submit">Войти</button>
-            </form>
+  return (
+    <div className="login-container">
+      <h2>Вход</h2>
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label>Логин</label>
+          <input
+            type="text"
+            placeholder="Введите логин"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
         </div>
-    );
-}
+        <div>
+          <label>Пароль</label>
+          <input
+            type="password"
+            placeholder="Введите пароль"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+
+        {error && <p style={{ color: "red" }}>{error}</p>}
+
+        <button type="submit">Войти</button>
+      </form>
+    </div>
+  );
+};
+
+export default Login;

@@ -75,7 +75,7 @@ async function handleGameOver(finalScore)
   }
   try
   {
-    await saveGameResult(finalScore, token);
+    await saveGameResult(finalScore);
     console.log("Результат успешно сохранён в БД");
   } 
   catch (error) 

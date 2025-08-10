@@ -24,23 +24,26 @@ namespace Server.Controllers
         // POST: api/GameResults
         // Сохранение результата игры
         [HttpPost]
-        [Authorize] // только авторизованные пользователи могут сохранять
-        public async Task<IActionResult> SaveResult([FromBody] int score)
+        [Authorize]
+        public async Task<IActionResult> SaveResult([FromBody] SaveResultRequest request)
         {
-            if (score < 0)
+            if (request == null)
+                return BadRequest("Invalid request body.");
+
+            if (request.Score < 0)
                 return BadRequest("Score cannot be negative.");
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var username = User.Identity?.Name;
 
-            if (userId == null || username == null)
+            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(username))
                 return Unauthorized();
 
             var result = new GameResult
             {
                 UserId = userId,
                 Username = username,
-                Score = score,
+                Score = request.Score,
                 PlayedAt = DateTime.UtcNow
             };
 
