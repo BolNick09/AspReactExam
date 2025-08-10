@@ -49,7 +49,7 @@ public class Program
         {
             options.AddPolicy("ReactApp", policy =>
             {
-                policy.WithOrigins("http://localhost:3000") // Укажите адрес вашего React-приложения
+                policy.WithOrigins("http://localhost:5173") 
                       .AllowAnyHeader() // Разрешить все заголовки
                       .AllowAnyMethod() // Разрешить все HTTP-методы (GET, POST и т. д.)
                       .AllowCredentials(); // Если используете куки или авторизацию
@@ -72,16 +72,18 @@ public class Program
             // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
             app.UseHsts();
         }
-    
+        app.MapControllers();
+        app.MapRazorPages();
         app.UseHttpsRedirection();
         app.UseStaticFiles();
+        app.MapFallbackToFile("index.html");
 
         app.UseRouting();
         app.UseCors("ReactApp"); 
         app.UseAuthentication();
         app.UseAuthorization();
 
-        app.MapRazorPages();
+        
 
         app.Run();
     }
