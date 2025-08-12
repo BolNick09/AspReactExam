@@ -67,21 +67,22 @@ function Card({ icon: IconComponent, isFlipped, onClick })
 
 async function handleGameOver(finalScore) 
 {
-  const token = localStorage.getItem("token");
-  if (!token) 
-  {
-      console.warn("Нет токена — результат не отправлен");
-      return;
-  }
-  try
-  {
-    await saveGameResult(finalScore);
-    console.log("Результат успешно сохранён в БД");
-  } 
-  catch (error) 
-  {
-    console.error("Ошибка сохранения результата:", error);
-  }
+  // const token = localStorage.getItem("token");
+  // if (!token) 
+  // {
+  //     console.warn("Нет токена — результат не отправлен");
+  //     return;
+  // }
+  // try
+  // {
+  //   await saveGameResult(finalScore);
+  //   console.log("Результат успешно сохранён в БД");
+  // } 
+  // catch (error) 
+  // {
+  //   console.error("Ошибка сохранения результата:", error);
+  // }
+  console.log('handleGameOver called; finalScore=', finalScore);
 }
 
 function Game() 
@@ -127,10 +128,12 @@ function Game()
   const [gameCompleted, setGameCompleted] = useState(false);
   useEffect(() => {
     // когда игра завершается — формируем итоговый счёт и отправляем на сервер
-    if (gameCompleted) {
+    if (gameCompleted) 
+    {
       const finalScore = Math.max(1000 - (globalTime * 10 + clicks * 5), 0);
       (async () => {
-        try {
+        try 
+        {
           const token = getToken();
           if (!token) {
             // сохраняем локально, если пользователь не авторизован
@@ -147,9 +150,11 @@ function Game()
             return;
           }
 
-          await saveGameResult({ score: finalScore, time: globalTime, clicks }, token);
+          await saveGameResult(finalScore);
           console.log('Результат успешно отправлен на сервер');
-        } catch (err) {
+        } 
+        catch (err) 
+        {
           console.error('Ошибка при отправке результата:', err);
         }
       })();

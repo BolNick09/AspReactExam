@@ -27,6 +27,9 @@ namespace Server.Controllers
         [Authorize]
         public async Task<IActionResult> SaveResult([FromBody] SaveResultRequest request)
         {
+            Console.WriteLine("---------------------------------------------------------------");
+            Console.WriteLine(request.Score);
+            Console.WriteLine("---------------------------------------------------------------");
             if (request == null)
                 return BadRequest("Invalid request body.");
 
@@ -34,15 +37,15 @@ namespace Server.Controllers
                 return BadRequest("Score cannot be negative.");
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var username = User.Identity?.Name;
+            //var username = User.Identity?.Name;
 
-            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(username))
-                return Unauthorized();
+            //if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(username))
+            //    return Unauthorized();
 
             var result = new GameResult
             {
                 UserId = userId,
-                Username = username,
+                Username = userId,
                 Score = request.Score,
                 PlayedAt = DateTime.UtcNow
             };

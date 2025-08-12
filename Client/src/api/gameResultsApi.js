@@ -6,7 +6,7 @@ export async function saveGameResult(score) {
     if (!token) {
         throw new Error("Токен не найден. Войдите в систему.");
     }
-
+    console.log (`Отправляю на сервер `)
     const response = await fetch("/api/GameResults/save", {
         method: "POST",
         headers: {
@@ -15,13 +15,17 @@ export async function saveGameResult(score) {
         },
         body: JSON.stringify({ score })
     });
-
+  
     if (!response.ok) {
         throw new Error(`Ошибка сохранения результата: ${response.status}`);
     }
 
     return await response.json();
 }
+
+
+
+
 export async function getAllResults() {
   const response = await fetch(API_URL);
   if (!response.ok) {
