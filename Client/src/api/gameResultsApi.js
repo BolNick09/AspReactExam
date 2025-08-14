@@ -5,7 +5,6 @@ export async function saveGameResult(score, timeInSeconds, clicks) {
   if (!token) {
     throw new Error("Токен не найден. Войдите в систему.");
   }
-  console.log (`Отправляю на сервер очки: ${score} время в секундах: ${timeInSeconds} клики: ${clicks}`)
   const response = await fetch(`${API_URL}/save`, {
     method: "POST",
     headers: {
