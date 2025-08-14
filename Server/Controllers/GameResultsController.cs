@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Server.Data;
@@ -21,39 +21,77 @@ namespace Server.Controllers
             _context = context;
         }
 
-        // POST: api/GameResults
-        // Сохранение результата игры
+        // POST: /api/GameResults/save
         [HttpPost("save")]
         [Authorize]
-        public async Task<IActionResult> SaveResult([FromBody] SaveResultRequest request)
+        public async Task<IActionResult> Save([FromBody] SaveGameResultDto dto)
         {
-            Console.WriteLine("---------------------------------------------------------------");
-            Console.WriteLine(request.Score);
-            Console.WriteLine("---------------------------------------------------------------");
-            if (request == null)
-                return BadRequest("Invalid request body.");
-
-            if (request.Score < 0)
-                return BadRequest("Score cannot be negative.");
-
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            //var username = User.Identity?.Name;
-
-            //if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(username))
-            //    return Unauthorized();
-
-            var result = new GameResult
+            if (dto == null)
             {
-                UserId = userId,
-                Username = userId,
-                Score = request.Score,
+                return BadRequest("Empty payload");
+            }
+
+            // Имя пользователя берём из токена
+            string? username = User.Identity?.Name
+                ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+            ;
+
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                return Unauthorized("Username not found in token");
+            }
+
+            var entity = new GameResult
+            {
+                Username = username,
+                Score = dto.Score,
+                TimeInSeconds = dto.TimeInSeconds,
+                Clicks = dto.Clicks,
                 PlayedAt = DateTime.UtcNow
             };
 
-            _context.GameResults.Add(result);
+            _context.GameResults.Add(entity);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Result saved successfully." });
+            return Ok(new
+            {
+                entity.Id,
+                entity.Username,
+                entity.Score,
+                entity.TimeInSeconds,
+                entity.Clicks,
+                entity.PlayedAt
+            });
+        }
+
+        // GET: /api/GameResults/my
+        [HttpGet("my")]
+        [Authorize]
+        public async Task<IActionResult> My()
+        {
+            string? username = User.Identity?.Name
+                ?? User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                return Unauthorized("Username not found in token");
+            }
+
+            var myResults = await _context.GameResults
+                .Where(r => r.Username == username)
+                .OrderByDescending(r => r.Score)
+                .ThenBy(r => r.TimeInSeconds)
+                .ThenBy(r => r.Clicks)
+                .Select(r => new
+                {
+                    r.Score,
+                    r.TimeInSeconds,
+                    r.Clicks,
+                    r.PlayedAt
+                })
+                .ToListAsync();
+
+            return Ok(myResults);
         }
 
         // GET: api/GameResults
@@ -68,34 +106,13 @@ namespace Server.Controllers
                 {
                     r.Username,
                     r.Score,
-                    r.PlayedAt
+                    r.PlayedAt,
+                    r.TimeInSeconds,
+                    r.Clicks
                 })
                 .ToListAsync();
 
             return Ok(leaderboard);
-        }
-
-        // GET: api/GameResults/my
-        // Получение личных результатов
-        [HttpGet("my")]
-        [Authorize]
-        public async Task<IActionResult> GetMyResults()
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null)
-                return Unauthorized();
-
-            var myResults = await _context.GameResults
-                .Where(r => r.UserId == userId)
-                .OrderByDescending(r => r.Score)
-                .Select(r => new
-                {
-                    r.Score,
-                    r.PlayedAt
-                })
-                .ToListAsync();
-
-            return Ok(myResults);
         }
     }
 }

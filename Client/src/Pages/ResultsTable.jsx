@@ -8,11 +8,12 @@ export default function ResultsTable() {
     (async () => {
       try {
         const serverResults = await getAllResults();
+        console.log (serverResults)
         const mapped = serverResults.map(r => ({
           playerName: r.username || r.Username || 'Аноним',
           score: r.score || 0,
           date: r.playedAt || (new Date()).toISOString(),
-          time: r.time || null,
+          time: r.timeInSeconds || null,          
           clicks: r.clicks || null
         }));
         setResults(mapped.sort((a, b) => b.score - a.score));
@@ -65,7 +66,7 @@ const tableHeaderStyle = {
   padding: '8px',
   border: '1px solid #ddd',
   textAlign: 'left',
-  backgroundColor: '#f2f2f2'
+  backgroundColor: '#000000ff'
 };
 
 const tableCellStyle = {

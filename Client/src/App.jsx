@@ -150,7 +150,7 @@ function Game()
             return;
           }
 
-          await saveGameResult(finalScore);
+          await saveGameResult( {finalScore, globalTime, clicks });
           console.log('Результат успешно отправлен на сервер');
         } 
         catch (err) 
