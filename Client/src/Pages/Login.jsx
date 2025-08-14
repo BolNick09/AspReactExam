@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../api/authApi";
-import { jwtDecode } from "jwt-decode"; // у тебя v4.0.0 — импорт с фигурными скобками
+import { jwtDecode } from "jwt-decode"; 
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -13,11 +13,11 @@ const Login = () => {
     e.preventDefault();
     setError("");
     try {
-      // ВЫЗЫВАЕМ именно так — один объект, как сейчас в проекте
+
       const data = await login({ username, password });
 
       if (!data || !data.token) {
-        // если сервер вернул не то, что ожидали — логируем и показываем
+
         console.error("Login response unexpected:", data);
         setError("Сервер не вернул токен при входе");
         return;
@@ -34,7 +34,7 @@ const Login = () => {
 
       navigate("/");
     } catch (err) {
-      // err может быть объектом, строкой или Error
+
       console.error("Login failed:", err);
       const msg = (err && (err.message || JSON.stringify(err))) || "Ошибка входа";
       setError(msg);

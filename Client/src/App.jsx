@@ -11,7 +11,7 @@ import PlayerForm from './PlayerForm'
 import LoginPage from "./Pages/Login";
 import RegisterPage from "./Pages/Register";
 import { saveGameResult } from "./api/gameResultsApi";
-import { getToken } from "./auth/authority"; // если у тебя есть утилита для получения токена
+import { getToken } from "./auth/authority"; 
 
 import { useSelector, useDispatch } from 'react-redux'
 import { 
@@ -67,21 +67,6 @@ function Card({ icon: IconComponent, isFlipped, onClick })
 
 async function handleGameOver(finalScore) 
 {
-  // const token = localStorage.getItem("token");
-  // if (!token) 
-  // {
-  //     console.warn("Нет токена — результат не отправлен");
-  //     return;
-  // }
-  // try
-  // {
-  //   await saveGameResult(finalScore);
-  //   console.log("Результат успешно сохранён в БД");
-  // } 
-  // catch (error) 
-  // {
-  //   console.error("Ошибка сохранения результата:", error);
-  // }
   console.log('handleGameOver called; finalScore=', finalScore);
 }
 
@@ -127,7 +112,7 @@ function Game()
   const [flippedIndices, setFlippedIndices] = useState([]);
   const [gameCompleted, setGameCompleted] = useState(false);
   useEffect(() => {
-    // когда игра завершается — формируем итоговый счёт и отправляем на сервер
+
     if (gameCompleted) 
     {
       const finalScore = Math.max(1000 - (globalTime * 10 + clicks * 5), 0);
@@ -136,7 +121,7 @@ function Game()
         {
           const token = getToken();
           if (!token) {
-            // сохраняем локально, если пользователь не авторизован
+
             const stored = JSON.parse(localStorage.getItem('memoryGameResults') || '[]');
             stored.push({
               playerName: 'Аноним',
@@ -217,7 +202,7 @@ function Game()
       return;
     
 
-    // Запуск таймера при первом клике
+
     if (!timerActive && clicks === 0) 
       setTimerActive(true);   
  
