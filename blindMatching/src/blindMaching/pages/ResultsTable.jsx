@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getAllResults } from '../api/gameResultsApi';
+import { getAllResults } from "../scripts/gameResultsApi"
 
 export default function ResultsTable() {
   const [results, setResults] = useState([]);

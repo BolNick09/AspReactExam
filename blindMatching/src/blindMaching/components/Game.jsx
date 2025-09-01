@@ -1,17 +1,7 @@
 import { useState, useEffect } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom"
-import DeadEnd from './Pages/DeadEnd'
-import Home from './Pages/Home'
-import NavBar from './Pages/NavBar'
-import ResultsTable from './Pages/ResultsTable'
-import PlayerForm from './PlayerForm'
-import LoginPage from "./Pages/Login";
-import RegisterPage from "./Pages/Register";
-import { saveGameResult } from "./api/gameResultsApi";
-import { getToken } from "./auth/authority"; 
+import { saveGameResult } from "../scripts/gameResultsApi"
+import { getToken } from "../../auth/authority" 
+import Card from "./Card"
 
 import { useSelector, useDispatch } from 'react-redux'
 import { 
@@ -19,7 +9,7 @@ import {
   saveGlobalTime, 
   saveGameField, 
   resetGameState 
-} from './slice';
+} from "../store/slice";
 
 import { 
   FcAlarmClock, 
@@ -32,45 +22,11 @@ import {
   FcHome,
 } from "react-icons/fc";
 
-function NavbarWrapper() {
-  return (
-    <div>
-      <NavBar/>
-      <Outlet/>
-    </div>
-  )
-}
 
-function Card({ icon: IconComponent, isFlipped, onClick }) 
-{
-  return (
-    <div 
-      onClick={onClick}
-      style={{
-        width: '100px', 
-        height: '100px', 
-        backgroundColor: isFlipped ? 'transparent' : 'white',
-        margin: '10px', 
-        display: 'inline-flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        cursor: 'pointer',
-        border: '1px solid #ddd',
-        borderRadius: '8px'
-      }}
-    >
-      {isFlipped && <IconComponent style={{ fontSize: '3rem' }} />}
-    </div>
-  );
 
-}
 
-async function handleGameOver(finalScore) 
-{
-  console.log('handleGameOver called; finalScore=', finalScore);
-}
 
-function Game() 
+const Game = () => 
 {
   const icons = 
   [
@@ -107,6 +63,11 @@ function Game()
       isMatched: false
     }));
   };
+
+  async function handleGameOver(finalScore) 
+  {
+    console.log('handleGameOver called; finalScore=', finalScore);
+  }
 
   const [cards, setCards] = useState(initializeGame());
   const [flippedIndices, setFlippedIndices] = useState([]);
@@ -314,47 +275,4 @@ function Game()
   );
 }
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <NavbarWrapper/>,
-    children: [
-      {
-        path: "/",
-        element: <Home />
-      },
-      {
-        path: "/form",
-        element: <PlayerForm />
-      },
-      {
-        path: "/game",
-        element: <Game />
-      },
-      {
-        path: "/results",
-        element: <ResultsTable />
-      },
-      {
-        path: "*",
-        element: <DeadEnd />
-      },
-      { path: "/login", 
-        element: <LoginPage /> 
-      },
-      { path: "/register", 
-        element: <RegisterPage /> 
-      },
-    ]
-  }
-]);
-
-function App() {
-  return (
-    <div>
-      <RouterProvider router={router}/>
-    </div>
-  )
-}
-
-export default App;
+export default Game;
